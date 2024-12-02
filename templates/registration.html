@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Page</title>
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(145deg, #000000, #4d4857);
+        }
+        .container {
+            width: 40%;
+            padding: 20px;
+            background-color: #3b3b3b;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            color: #ffffff;
+        }
+        h2 {
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        input[type="text"], input[type="email"], input[type="date"], input[type="password"], input[type="tel"] {
+            width: 95%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 15px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            border-radius: 8px;
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover {
+            color: black;
+            cursor: pointer;
+        }
+        #terms-link {
+            color: #007bff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        #terms-link:hover {
+            text-decoration: underline;
+        }
+        .flash {
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .flash.success {
+            background-color: #28a745;
+            color: white;
+        }
+        .flash.error {
+            background-color: #dc3545;
+            color: white;
+        }
+        small {
+            display: block;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Create an Account</h2>
+
+        <!-- Flash message display -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div>
+                    {% for category, message in messages %}
+                        <div class="flash {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Registration form -->
+        <form action="/register" method="POST">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" placeholder="Your Name" required>
+
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" placeholder="Your Email" required>
+
+            <label for="phone">Phone Number:</label>
+            <input type="tel" id="phone" name="phone" placeholder="Enter a 10-digit phone number" required pattern="\d{10}" title="Enter a valid 10-digit phone number">
+
+            <label for="dob">Date of Birth:</label>
+            <input type="date" id="dob" name="dob" required>
+
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" placeholder="Your Password" required onkeyup="validatePassword()">
+            <small id="password-hint" style="color: red;">
+                Password must be at least 8 characters long, include an uppercase letter, a lowercase letter, a number, and a special character.
+            </small>
+
+            <label for="confirmPassword">Confirm Password:</label>
+            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm Your Password" required onkeyup="checkPasswordMatch()">
+            <small id="confirm-password-hint" style="color: red;"></small>
+
+            <label for="role">Select Role:</label>
+            <div style="display: flex; align-items: center;">
+                <input type="radio" id="fleetManager" name="role" value="Fleet Manager" required>
+                <label for="fleetManager" style="margin-right: 10px;">Fleet Manager</label>
+                <input type="radio" id="driver" name="role" value="Driver" required>
+                <label for="driver">Driver</label>
+            </div>
+
+            <div style="display: flex; align-items: center; margin-top: 10px;">
+                <input type="checkbox" id="terms" name="terms" required>
+                <label for="terms" style="margin-left: 5px;">
+                    I agree to the <a href="#" id="terms-link">Terms and Conditions</a>
+                </label>
+            </div>
+
+            <button type="submit">Create Account</button>
+        </form>
+<!-- Add this below the form -->
+<div style="text-align: center; margin-top: 15px;">
+    <p>Already registered? <a href="/login" style="color: #007bff; text-decoration: none;">Back to Login</a></p>
+</div>
+
+    </div>
+
+    <!-- Modal for Terms and Conditions -->
+    <div id="terms-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="close-button">&times;</span>
+            <h2>Terms and Conditions</h2>
+            <p>
+                By using our Service, you confirm that you are at least 18 years old and have a valid driver’s license.
+                You agree to ensure your electric vehicle is safe and compliant with all laws while using designated 
+                charging stations operated by third parties, for which we are not responsible.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('terms-link').addEventListener('click', function(event) {
+            event.preventDefault();
+            document.getElementById('terms-modal').style.display = 'block';
+        });
+
+        document.getElementById('close-button').addEventListener('click', function() {
+            document.getElementById('terms-modal').style.display = 'none';
+        });
+
+        document.getElementById('terms-modal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                this.style.display = 'none';
+            }
+        });
+
+        function validatePassword() {
+            const password = document.getElementById('password').value;
+            const hint = document.getElementById('password-hint');
+            const regex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+            if (!regex.test(password)) {
+                hint.style.color = 'red';
+                hint.textContent = 'Weak password. Ensure it meets the requirements.';
+            } else {
+                hint.style.color = 'green';
+                hint.textContent = 'Strong password.';
+            }
+        }
+
+        function checkPasswordMatch() {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const confirmHint = document.getElementById('confirm-password-hint');
+
+            if (password !== confirmPassword) {
+                confirmHint.style.color = 'red';
+                confirmHint.textContent = 'Passwords do not match!';
+            } else {
+                confirmHint.style.color = 'green';
+                confirmHint.textContent = 'Passwords match.';
+            }
+        }
+    </script>
+</body>
+</html>
